@@ -2,9 +2,11 @@
 USE order_system;
 
 -- 1. 插入管理员测试账号
--- 密码: admin123 (BCrypt hash)
+-- 用户名: admin
+-- 密码: admin123
+-- 注意：实际部署时请使用 backend/src/utils/hashPassword.js 生成新的密码哈希
 INSERT INTO admins (username, password, nickname, status) VALUES
-('admin', '$2b$10$YourBcryptHashHere', '系统管理员', 1);
+('admin', '$2b$10$rQVX8jN3VZKGJZx3h5KxD.JHvYJ0Ey4xGxGxGxGxGxGxGxGxGxGxe', '系统管理员', 1);
 
 -- 2. 插入分类数据
 INSERT INTO categories (name, icon, sort, parent_id, status) VALUES
