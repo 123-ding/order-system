@@ -18,10 +18,12 @@ redisClient.on('connect', () => {
 });
 
 redisClient.on('error', (err) => {
-  console.error('❌ Redis连接失败:', err);
+  console.warn('⚠️  Redis连接失败 (Demo模式下可忽略):', err.message);
 });
 
 // 连接Redis
-redisClient.connect().catch(console.error);
+redisClient.connect().catch((err) => {
+  console.warn('⚠️  Redis未启动 (Demo模式下可忽略)');
+});
 
 module.exports = redisClient;

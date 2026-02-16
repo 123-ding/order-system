@@ -37,7 +37,8 @@ sequelize.authenticate()
     console.log('✅ 数据库连接成功');
   })
   .catch(err => {
-    console.error('❌ 数据库连接失败:', err);
+    console.warn('⚠️  数据库连接失败 (Demo模式下可忽略):', err.message);
+    console.log('💡 提示: 请参考 docs/DATABASE_CONNECTION.md 配置数据库');
   });
 
 module.exports = sequelize;
