@@ -31,6 +31,8 @@ source database/seeds/001_test_data.sql
 exit
 ```
 
+> 💡 **数据库连接遇到问题？** 查看 [📊 数据库连接配置指南](./docs/DATABASE_CONNECTION.md) 获取详细帮助。
+
 ### 步骤3: 启动后端
 
 ```bash

@@ -158,6 +158,8 @@ source database/migrations/001_create_tables.sql
 source database/seeds/001_test_data.sql
 ```
 
+> 💡 **需要数据库连接帮助？** 查看 [📊 数据库连接配置指南](./docs/DATABASE_CONNECTION.md) 获取详细的分步教程和问题排查。
+
 ### 3. 后端启动
 
 ```bash
@@ -199,6 +201,7 @@ npm run dev
 - [📋 产品需求文档 (PRD)](./docs/PRD.md)
 - [🔌 API 接口文档](./docs/API.md)
 - [🗄️ 数据库设计文档](./docs/DATABASE.md)
+- [📊 数据库连接配置指南](./docs/DATABASE_CONNECTION.md) ⭐ **新手必读**
 - [🚢 部署文档](./docs/DEPLOYMENT.md)
 
 ## 💡 核心特性
