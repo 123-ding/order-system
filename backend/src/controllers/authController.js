@@ -37,8 +37,8 @@ exports.login = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, errors: errors.array() });
 
-    const { email, password } = req.body;
-    const user = await User.findByEmail(email);
+    const { username, password } = req.body;
+    const user = await User.findByUsername(username);
     if (!user) return res.status(401).json({ success: false, message: 'Invalid credentials' });
 
     if (user.status === 'inactive') return res.status(403).json({ success: false, message: 'Account is inactive' });

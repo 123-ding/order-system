@@ -12,7 +12,7 @@ router.post('/register', [
 ], authController.register);
 
 router.post('/login', [
-  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+  body('username').trim().notEmpty().withMessage('Username required'),
   body('password').notEmpty().withMessage('Password required'),
 ], authController.login);
 
