@@ -1,106 +1,52 @@
-# 点菜系统 (Order System)
+# 低空智联网安全可信中台
 
-一个完整的智能点菜系统，支持微信公众号，包含后台管理和移动端用户界面。
+本仓库包含两个子项目：
 
-## 项目简介
-
-本项目是一个功能完善的点菜系统，包含：
-- 🎨 **后台管理系统**：基于 Vue 3 + Element Plus 的美观管理界面
-- 📱 **移动端应用**：基于 Vue 3 + Vant UI 的微信公众号网页
-- 🚀 **后端服务**：基于 Node.js + Express 的 RESTful API
-- 💾 **数据库**：MySQL 数据存储
-
-## 主要功能
-
-### 后台管理
-- ✅ 菜品管理（上传、编辑、删除）
-- ✅ 分类管理
-- ✅ 订单管理
-- ✅ 用户管理
-- ✅ 评价管理
-- ✅ 数据统计
-
-### 移动端
-- ✅ 菜品浏览和搜索
-- ✅ 按日期点菜
-- ✅ 购物车功能
-- ✅ 订单管理
-- ✅ 菜品评价
-- ✅ 微信登录
-- ✅ 微信消息推送
-
-## 技术栈
-
-### 后端
-- Node.js 18+
-- Express.js 4.x
-- MySQL 8.0
-- Redis 6.x
-- JWT 认证
-- 微信公众号 SDK
-
-### 后台前端
-- Vue 3 (Composition API)
-- Element Plus
-- Vue Router 4
-- Pinia
-- Vite
-- Axios
-
-### 移动端前端
-- Vue 3 (Composition API)
-- Vant UI 4.x
-- Vue Router 4
-- Pinia
-- Vite
-- Axios
-
-## 项目结构
-
-```
-order-system/
-├── backend/              # 后端服务
-├── admin-frontend/       # 后台管理前端
-├── mobile-frontend/      # 移动端前端
-├── database/            # 数据库文件
-└── docs/                # 文档
-```
-
-## 快速开始
-
-详细的安装和部署指南请查看 [开发文档](./docs/DEPLOYMENT.md)
-
-### 环境要求
-
-- Node.js >= 18.0.0
-- MySQL >= 8.0
-- Redis >= 6.0
-
-## 文档
-
-- [产品需求文档 (PRD)](./docs/PRD.md)
-- [API 接口文档](./docs/API.md)
-- [数据库设计文档](./docs/DATABASE.md)
-- [部署文档](./docs/DEPLOYMENT.md)
-
-## 开发进度
-
-- [x] 项目框架搭建
-- [ ] 后端 API 开发
-- [ ] 后台管理系统开发
-- [ ] 移动端开发
-- [ ] 微信集成
-- [ ] 测试和优化
-- [ ] 部署上线
-
-## 许可证
-
-MIT License
-
-## 作者
-
-123-ding
+1. **低空智联网安全可信中台**（`low-altitude-platform/`）— 核心新项目
+2. **点菜系统**（`README_order_system.md`）— 原有系统（历史保留）
 
 ---
 
-⭐ 如果这个项目对您有帮助，请给个 Star！
+## 低空智联网安全可信中台
+
+一个面向低空无人机管控场景的 B/S 架构 Web 平台，统一接入各品牌无人机、探测设备、侦测设备和反制设备，通过下拉框选取通信协议（MAVLink/DJI SDK/MQTT/WebSocket/HTTP 等）和 IP 等参数完成设备配置。
+
+### 主要功能
+
+- 🚁 **无人机管理**：支持大疆、道通、极飞等品牌，MAVLink v1/v2、DJI SDK、TCP/UDP 协议
+- 📡 **探测设备管理**：支持雷达、ADS-B、ONVIF 摄像头等，TCP/UDP/串口/HTTP 协议
+- 🔍 **侦测设备管理**：射频频谱分析仪等，MQTT/WebSocket/HTTP 协议
+- 🛡️ **反制设备管理**：压制干扰仪等，TCP/UDP/串口/MQTT 协议
+- 🔔 **告警中心**：三级告警（紧急/严重/预警），实时推送，确认处置
+- 📋 **协议管理**：内置 9 种协议模板，支持扩展
+- 👤 **系统管理**：用户、角色权限（RBAC）、审计日志
+
+### 文档
+
+- [功能清单](./docs/功能清单.md)
+- [需求规格说明书](./docs/需求规格说明书.md)
+- [解决方案](./docs/解决方案.md)
+
+### 快速启动
+
+```bash
+cd low-altitude-platform
+npm install
+npm run dev       # 开发模式
+npm run build     # 生产构建
+```
+
+**演示账号**：admin / admin123
+
+### 技术栈
+
+- Vue 3 + TypeScript + Vite
+- Element Plus（UI 组件库）
+- Vue Router 4 + Pinia
+- Axios
+
+---
+
+## 点菜系统（历史版本）
+
+详见 [README_order_system.md](./README_order_system.md)
