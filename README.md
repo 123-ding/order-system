@@ -82,6 +82,7 @@ order-system/
 - [API 接口文档](./docs/API.md)
 - [数据库设计文档](./docs/DATABASE.md)
 - [部署文档](./docs/DEPLOYMENT.md)
+- [低空飞行活动审批流程（含审批部门与职责）](./docs/flight-approval-flow.md)
 
 ## 开发进度
 
