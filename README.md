@@ -82,6 +82,7 @@ order-system/
 - [API 接口文档](./docs/API.md)
 - [数据库设计文档](./docs/DATABASE.md)
 - [部署文档](./docs/DEPLOYMENT.md)
+- [飞行活动审批及放飞流程](./docs/飞行活动审批流程.md)
 
 ## 开发进度
 
