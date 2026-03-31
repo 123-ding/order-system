@@ -355,6 +355,171 @@ class ElectroOpticalAdapter(BaseSensorAdapter):
             return None
 
 
+class TelemetryAdapter(BaseSensorAdapter):
+    """
+    飞行器遥测数据适配器
+
+    解析飞行器自身上报的遥测数据（通过机载数据链传回地面站）。
+    遥测数据是飞行器自身传感器（GPS/IMU/气压计）的直接输出，
+    被视为权威数据源，在融合时具有最高优先级。
+    """
+
+    def parse_raw_data(self, raw_data: dict) -> Optional[Measurement]:
+        """
+        解析遥测原始数据
+
+        Expected raw_data format:
+        {
+            "timestamp": float,          # Unix时间戳
+            "latitude": float,           # 纬度 (度) - 来自机载GPS
+            "longitude": float,          # 经度 (度)
+            "altitude": float,           # 高度 (米, 海拔/椭球高)
+            "velocity_east": float,      # 东向速度 (m/s), 可选
+            "velocity_north": float,     # 北向速度 (m/s), 可选
+            "velocity_up": float,        # 垂直速度 (m/s), 可选
+            "serial_number": str,        # 飞行器序列号
+            "operator_id": str,          # 操作员ID, 可选
+            "flight_plan_id": str,       # 飞行计划编号, 可选
+            "battery_level": float,      # 电池电量(%), 可选
+            "flight_mode": str,          # 飞行模式, 可选
+            "aircraft_type": str,        # 飞行器类型 (如 "MULTI_ROTOR"), 可选
+        }
+        """
+        try:
+            meas = Measurement(
+                sensor_id=self.sensor_info.sensor_id,
+                sensor_type=SensorType.TELEMETRY,
+                timestamp=raw_data["timestamp"],
+                serial_number=raw_data.get("serial_number"),
+                operator_id=raw_data.get("operator_id"),
+                flight_plan_id=raw_data.get("flight_plan_id"),
+                battery_level=raw_data.get("battery_level"),
+                flight_mode=raw_data.get("flight_mode"),
+                is_authoritative=True,
+            )
+
+            # 经纬高→ENU (机载GPS直接输出)
+            meas.position = lla_to_enu(
+                raw_data["latitude"],
+                raw_data["longitude"],
+                raw_data["altitude"],
+                self.config.reference_lat,
+                self.config.reference_lon,
+                self.config.reference_alt,
+            )
+
+            # 速度（机载IMU/GPS组合输出）
+            if "velocity_east" in raw_data:
+                meas.velocity = np.array([
+                    raw_data["velocity_east"],
+                    raw_data["velocity_north"],
+                    raw_data.get("velocity_up", 0.0),
+                ])
+
+            # 遥测数据精度很高（机载GPS/IMU）
+            meas.noise_covariance = np.diag([4.0, 4.0, 9.0])  # 2m/2m/3m
+
+            # 分类：来自飞行器自身上报，置信度极高
+            aircraft_type = raw_data.get("aircraft_type", "").upper()
+            try:
+                meas.classification = TargetCategory[aircraft_type]
+            except KeyError:
+                # 有遥测数据说明是合规飞行器
+                meas.classification = TargetCategory.MULTI_ROTOR
+            meas.classification_confidence = 0.98
+
+            return meas
+
+        except (KeyError, TypeError, ValueError):
+            return None
+
+
+class RIDAdapter(BaseSensorAdapter):
+    """
+    Remote ID (远程识别) 设备适配器
+
+    解析符合远程识别标准 (如FAA Remote ID / 中国UAS RID) 的广播数据。
+    RID设备通过蓝牙5.0或Wi-Fi NAN广播飞行器的身份、位置、速度等信息。
+    RID数据被视为权威数据源，在融合时具有最高优先级。
+    """
+
+    def parse_raw_data(self, raw_data: dict) -> Optional[Measurement]:
+        """
+        解析RID广播数据
+
+        Expected raw_data format:
+        {
+            "timestamp": float,              # Unix时间戳
+            "uas_id": str,                   # 无人机唯一标识 (UAS ID / Serial Number)
+            "uas_id_type": str,              # ID类型: "serial" | "registration" | "utm_assigned"
+            "latitude": float,               # 纬度 (度)
+            "longitude": float,              # 经度 (度)
+            "altitude": float,               # 高度 (米, 气压/GPS高)
+            "height_agl": float,             # 离地高度 (米), 可选
+            "velocity_east": float,          # 东向速度 (m/s), 可选
+            "velocity_north": float,         # 北向速度 (m/s), 可选
+            "velocity_up": float,            # 垂直速度 (m/s), 可选
+            "operator_id": str,              # 操作员ID, 可选
+            "operator_latitude": float,      # 操作员纬度, 可选
+            "operator_longitude": float,     # 操作员经度, 可选
+            "rid_type": str,                 # "broadcast" | "network"
+            "aircraft_type": str,            # 飞行器类型, 可选
+        }
+        """
+        try:
+            meas = Measurement(
+                sensor_id=self.sensor_info.sensor_id,
+                sensor_type=SensorType.RID,
+                timestamp=raw_data["timestamp"],
+                uas_id=raw_data.get("uas_id"),
+                rid_operator_id=raw_data.get("operator_id"),
+                rid_type=raw_data.get("rid_type", "broadcast"),
+                is_authoritative=True,
+            )
+
+            # 经纬高→ENU
+            meas.position = lla_to_enu(
+                raw_data["latitude"],
+                raw_data["longitude"],
+                raw_data["altitude"],
+                self.config.reference_lat,
+                self.config.reference_lon,
+                self.config.reference_alt,
+            )
+
+            # 速度
+            if "velocity_east" in raw_data:
+                meas.velocity = np.array([
+                    raw_data["velocity_east"],
+                    raw_data["velocity_north"],
+                    raw_data.get("velocity_up", 0.0),
+                ])
+
+            # 操作员位置
+            if "operator_latitude" in raw_data and "operator_longitude" in raw_data:
+                meas.rid_operator_location = np.array([
+                    raw_data["operator_latitude"],
+                    raw_data["operator_longitude"],
+                    raw_data.get("operator_altitude", 0.0),
+                ])
+
+            # RID位置精度 (来自机载GPS，通过无线广播)
+            meas.noise_covariance = np.diag([9.0, 9.0, 16.0])  # 3m/3m/4m
+
+            # 分类: RID设备是合规无人机
+            aircraft_type = raw_data.get("aircraft_type", "").upper()
+            try:
+                meas.classification = TargetCategory[aircraft_type]
+            except KeyError:
+                meas.classification = TargetCategory.MULTI_ROTOR
+            meas.classification_confidence = 0.95
+
+            return meas
+
+        except (KeyError, TypeError, ValueError):
+            return None
+
+
 def create_adapter(
     sensor_info: SensorInfo,
     config: FusionConfig,
@@ -374,6 +539,8 @@ def create_adapter(
         SensorType.ADSB: ADSBAdapter,
         SensorType.RF_DETECTOR: RFDetectorAdapter,
         SensorType.ELECTRO_OPTICAL: ElectroOpticalAdapter,
+        SensorType.TELEMETRY: TelemetryAdapter,
+        SensorType.RID: RIDAdapter,
     }
 
     adapter_cls = adapter_map.get(sensor_info.sensor_type)

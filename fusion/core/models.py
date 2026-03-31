@@ -26,6 +26,8 @@ class SensorType(Enum):
     ADSB = auto()           # ADS-B接收机
     ACOUSTIC = auto()       # 声学阵列
     WEATHER = auto()        # 气象站
+    TELEMETRY = auto()      # 飞机自身遥测数据（机载设备直传）
+    RID = auto()            # Remote ID 远程识别设备
 
 
 class TrackState(Enum):
@@ -109,6 +111,22 @@ class Measurement:
     rf_frequency: Optional[float] = None    # 中心频率 (MHz)
     rf_protocol: Optional[str] = None       # 通信协议
 
+    # 遥测数据专有字段
+    serial_number: Optional[str] = None     # 飞行器序列号
+    flight_plan_id: Optional[str] = None    # 飞行计划编号
+    operator_id: Optional[str] = None       # 操作员ID
+    battery_level: Optional[float] = None   # 电池电量 (%)
+    flight_mode: Optional[str] = None       # 飞行模式 (如 "AUTO", "MANUAL")
+
+    # RID (Remote ID) 专有字段
+    rid_type: Optional[str] = None          # RID类型 ("broadcast" | "network")
+    uas_id: Optional[str] = None            # 无人机唯一标识 (UAS ID)
+    rid_operator_id: Optional[str] = None   # RID运营商/操作员ID
+    rid_operator_location: Optional[np.ndarray] = None  # 操作员位置 [lat, lon, alt]
+
+    # 标记是否为权威数据源（遥测/RID等自身上报的数据）
+    is_authoritative: bool = False
+
     # 目标分类信息（来自传感器本身的分类结果）
     classification: Optional[TargetCategory] = None
     classification_confidence: float = 0.0
@@ -143,6 +161,10 @@ class Track:
     category: TargetCategory = TargetCategory.UNKNOWN
     category_bpa: Optional[dict] = None   # D-S证据理论的基本概率赋值
     threat_level: ThreatLevel = ThreatLevel.NONE
+
+    # 权威数据源信息（遥测/RID）
+    has_authoritative_source: bool = False  # 是否有权威数据源关联
+    authoritative_meas: Optional[dict] = None  # 最新权威量测的附加信息
 
     # 航迹质量评分 [0, 100]
     quality_score: float = 0.0
@@ -187,12 +209,18 @@ class Track:
         position_accuracy = min(1.0, 10.0 / max(np.trace(self.covariance[:3, :3]), 0.1))
         continuity = 1.0 / (1.0 + self.miss_count)
 
-        self.quality_score = (
+        base_score = (
             hit_ratio * 30
             + sensor_diversity * 25
             + position_accuracy * 25
             + continuity * 20
         )
+
+        # 拥有权威数据源（遥测/RID）时给予质量加分
+        if self.has_authoritative_source:
+            base_score = min(100.0, base_score * 1.2)
+
+        self.quality_score = base_score
         return self.quality_score
 
 
@@ -231,3 +259,9 @@ class FusedTarget:
     # ADS-B信息（如果有）
     icao_address: Optional[str] = None
     callsign: Optional[str] = None
+
+    # 遥测/RID信息（如果有）
+    serial_number: Optional[str] = None     # 飞行器序列号
+    operator_id: Optional[str] = None       # 操作员ID
+    uas_id: Optional[str] = None            # UAS唯一标识 (RID)
+    has_authoritative_source: bool = False   # 是否有权威数据源（遥测/RID）

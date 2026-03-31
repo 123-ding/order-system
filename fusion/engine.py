@@ -31,6 +31,7 @@ from .core.models import (
     FusedTarget,
     Measurement,
     SensorInfo,
+    SensorType,
     TargetCategory,
     TrackState,
 )
@@ -164,6 +165,10 @@ class FusionEngine:
         # Step 1: 预处理 - 过滤无效量测
         valid_measurements = self._preprocess(measurements)
 
+        # 对量测排序：权威数据源排在后面，确保它们最后更新航迹
+        # 这样权威源的状态更新会覆盖之前较低精度源的结果
+        valid_measurements.sort(key=lambda m: m.is_authoritative)
+
         # Step 2: 对已有航迹做预测
         self._predict_all_tracks()
 
@@ -269,13 +274,35 @@ class FusionEngine:
             track.covariance += probs[i] * (pred_covs[i] + np.outer(diff, diff))
 
     def _update_track(self, track, meas: Measurement):
-        """用量测更新航迹状态"""
+        """用量测更新航迹状态
+
+        当量测来自权威数据源（遥测/RID）时，使用更低的量测噪声
+        以使卡尔曼滤波器更信任该数据，并直接覆盖分类结果。
+        """
         H = build_observation_matrix(meas_dim=3)
         R = meas.noise_covariance
         if R is None:
             R = np.diag([100.0, 100.0, 100.0])
 
         z = meas.position
+
+        # 权威数据源优先级处理
+        is_authoritative = meas.is_authoritative
+        if is_authoritative:
+            # 进一步缩小量测噪声，让KF更信任权威数据
+            R = R * self.config.authoritative_noise_scale
+            track.has_authoritative_source = True
+            # 保存权威源附加信息
+            track.authoritative_meas = {
+                "sensor_type": meas.sensor_type.name,
+                "serial_number": meas.serial_number,
+                "operator_id": meas.operator_id or meas.rid_operator_id,
+                "uas_id": meas.uas_id,
+                "flight_plan_id": meas.flight_plan_id,
+                "battery_level": meas.battery_level,
+                "flight_mode": meas.flight_mode,
+                "rid_type": meas.rid_type,
+            }
 
         if self._imm and track.track_id in self._imm_states:
             self._update_track_imm(track, z, R)
@@ -287,12 +314,29 @@ class FusionEngine:
             track.state_vector = x_upd
             track.covariance = P_upd
 
+        # 若权威源提供了速度，直接写入（高置信度）
+        if is_authoritative and meas.velocity is not None:
+            track.state_vector[3:6] = meas.velocity
+            # 缩小速度协方差
+            track.covariance[3, 3] = min(track.covariance[3, 3], 1.0)
+            track.covariance[4, 4] = min(track.covariance[4, 4], 1.0)
+            track.covariance[5, 5] = min(track.covariance[5, 5], 4.0)
+
         # 更新传感器关联记录
         track.associated_sensors.add(meas.sensor_id)
 
-        # 属性融合（D-S证据理论）
+        # 属性融合
         if meas.classification and meas.classification != TargetCategory.UNKNOWN:
-            self._fuse_attribute(track, meas)
+            if is_authoritative and self.config.authoritative_override_classification:
+                # 权威数据源直接覆盖分类
+                track.category = meas.classification
+                track.category_bpa = {
+                    meas.classification.name: meas.classification_confidence,
+                    "UNKNOWN": 1.0 - meas.classification_confidence,
+                }
+            else:
+                # 普通数据源使用D-S证据融合
+                self._fuse_attribute(track, meas)
 
     def _update_track_imm(self, track, z: np.ndarray, R: np.ndarray):
         """用IMM更新航迹"""
@@ -400,6 +444,10 @@ class FusionEngine:
             quality_score=track.quality_score,
             contributing_sensors=list(track.associated_sensors),
             track_state=track.state,
+            has_authoritative_source=track.has_authoritative_source,
+            serial_number=(track.authoritative_meas or {}).get("serial_number"),
+            operator_id=(track.authoritative_meas or {}).get("operator_id"),
+            uas_id=(track.authoritative_meas or {}).get("uas_id"),
         )
 
     # ─────────────────── 状态查询 ───────────────────

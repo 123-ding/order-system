@@ -48,6 +48,16 @@ class FusionConfig:
     ds_conflict_threshold: float = 0.7  # D-S证据理论冲突阈值
     classification_confidence_threshold: float = 0.6  # 分类置信度门限
 
+    # ─── 权威数据源优先级参数 ───
+    # 遥测(TELEMETRY)和RID数据被视为权威数据源，在状态更新和属性融合中优先使用
+    authoritative_sensor_types: list = field(
+        default_factory=lambda: ["TELEMETRY", "RID"]
+    )
+    # 权威数据源的量测噪声缩放因子（<1 表示更信任权威数据）
+    authoritative_noise_scale: float = 0.1
+    # 当存在权威数据时，是否直接覆盖分类结果（不走D-S融合）
+    authoritative_override_classification: bool = True
+
     # ─── 坐标系统参数 ───
     # 参考原点 (WGS84) - 默认为某城市中心
     reference_lat: float = 30.0        # 参考点纬度 (度)
