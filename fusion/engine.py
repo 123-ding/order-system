@@ -296,7 +296,7 @@ class FusionEngine:
             track.authoritative_meas = {
                 "sensor_type": meas.sensor_type.name,
                 "serial_number": meas.serial_number,
-                "operator_id": meas.operator_id or meas.rid_operator_id,
+                "operator_id": meas.operator_id if meas.operator_id is not None else meas.rid_operator_id,
                 "uas_id": meas.uas_id,
                 "flight_plan_id": meas.flight_plan_id,
                 "battery_level": meas.battery_level,

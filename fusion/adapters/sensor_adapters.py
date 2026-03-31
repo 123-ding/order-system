@@ -424,9 +424,9 @@ class TelemetryAdapter(BaseSensorAdapter):
             try:
                 meas.classification = TargetCategory[aircraft_type]
             except KeyError:
-                # 有遥测数据说明是合规飞行器
-                meas.classification = TargetCategory.MULTI_ROTOR
-            meas.classification_confidence = 0.98
+                # 无法确定具体类型时标记为UNKNOWN
+                meas.classification = TargetCategory.UNKNOWN
+            meas.classification_confidence = 0.98 if meas.classification != TargetCategory.UNKNOWN else 0.0
 
             return meas
 
@@ -511,8 +511,9 @@ class RIDAdapter(BaseSensorAdapter):
             try:
                 meas.classification = TargetCategory[aircraft_type]
             except KeyError:
-                meas.classification = TargetCategory.MULTI_ROTOR
-            meas.classification_confidence = 0.95
+                # 无法确定具体类型时标记为UNKNOWN
+                meas.classification = TargetCategory.UNKNOWN
+            meas.classification_confidence = 0.95 if meas.classification != TargetCategory.UNKNOWN else 0.0
 
             return meas
 

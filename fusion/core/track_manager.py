@@ -129,7 +129,7 @@ class TrackManager:
                     track.state = TrackState.DELETED
 
         # 更新质量评分
-        track.compute_quality()
+        track.compute_quality(self.config.authoritative_quality_multiplier)
 
     def cleanup_deleted(self):
         """清理已删除的航迹"""

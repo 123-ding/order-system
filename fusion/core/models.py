@@ -201,8 +201,12 @@ class Track:
         if len(self.history) > self.max_history_length:
             self.history.pop(0)
 
-    def compute_quality(self) -> float:
-        """计算航迹质量评分"""
+    def compute_quality(self, authoritative_quality_multiplier: float = 1.2) -> float:
+        """计算航迹质量评分
+
+        Args:
+            authoritative_quality_multiplier: 权威数据源质量乘数，默认1.2
+        """
         # 基于多因素综合评分
         hit_ratio = self.hit_count / max(self.total_updates, 1)
         sensor_diversity = min(len(self.associated_sensors) / 3.0, 1.0)
@@ -218,7 +222,7 @@ class Track:
 
         # 拥有权威数据源（遥测/RID）时给予质量加分
         if self.has_authoritative_source:
-            base_score = min(100.0, base_score * 1.2)
+            base_score = min(100.0, base_score * authoritative_quality_multiplier)
 
         self.quality_score = base_score
         return self.quality_score

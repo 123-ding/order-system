@@ -57,6 +57,8 @@ class FusionConfig:
     authoritative_noise_scale: float = 0.1
     # 当存在权威数据时，是否直接覆盖分类结果（不走D-S融合）
     authoritative_override_classification: bool = True
+    # 拥有权威数据源的航迹质量评分乘数
+    authoritative_quality_multiplier: float = 1.2
 
     # ─── 坐标系统参数 ───
     # 参考原点 (WGS84) - 默认为某城市中心
