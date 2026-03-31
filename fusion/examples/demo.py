@@ -16,6 +16,9 @@ from fusion.config.settings import FusionConfig
 from fusion.core.models import SensorInfo, SensorType
 from fusion.engine import FusionEngine
 
+# 纬度1度对应的地面距离 (米)
+METERS_PER_DEGREE_LAT = 111_000.0
+
 
 def main():
     # ═══════ Step 1: 配置融合引擎 ═══════
@@ -120,8 +123,8 @@ def main():
                 "timestamp": t,
                 "icao": "A1B2C3",
                 "callsign": "CCA1234",
-                "latitude": 30.0 + aircraft_true_pos[1] / 111000,
-                "longitude": 120.0 + aircraft_true_pos[0] / (111000 * np.cos(np.radians(30))),
+                "latitude": 30.0 + aircraft_true_pos[1] / METERS_PER_DEGREE_LAT,
+                "longitude": 120.0 + aircraft_true_pos[0] / (METERS_PER_DEGREE_LAT * np.cos(np.radians(30))),
                 "altitude": aircraft_true_pos[2],
                 "velocity_east": -20.0,
                 "velocity_north": 15.0,
