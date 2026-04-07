@@ -544,9 +544,10 @@ CREATE TABLE IF NOT EXISTS `operation_logs` (
 -- 初始化数据
 -- ============================================
 
--- 插入默认管理员 (密码: admin123)
+-- 插入默认管理员 (密码: admin123, 注意: 生产环境必须修改此密码)
+-- 以下哈希值对应密码 'admin123'，使用 bcrypt cost=10 生成
 INSERT INTO `admins` (`username`, `password_hash`, `name`, `phone`, `role`, `status`)
-VALUES ('admin', '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36Fr9SryQ.PLACEHOLDER', '系统管理员', '13800000000', 'super_admin', 1);
+VALUES ('admin', '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '系统管理员', '13800000000', 'super_admin', 1);
 
 -- 插入示例起降点
 INSERT INTO `vertiports` (`uuid`, `name`, `code`, `address`, `city`, `district`, `latitude`, `longitude`, `capacity`, `available_slots`, `charging_stations`, `status`) VALUES

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const config = require('../config');
 const ResponseHelper = require('../utils/response');
 
 /**
@@ -14,7 +15,7 @@ function authenticate(req, res, next) {
   const token = authHeader.substring(7);
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwt.secret);
     req.user = decoded;
     next();
   } catch (err) {
@@ -51,7 +52,7 @@ function optionalAuth(req, _res, next) {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     try {
-      req.user = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = jwt.verify(token, config.jwt.secret);
     } catch {
       // Token invalid, but we don't block the request
       req.user = null;

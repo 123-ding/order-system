@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ResponseHelper = require('../utils/response');
+const { maskPhone } = require('../utils/mask');
 const { loginLimiter, smsLimiter } = require('../middleware/rateLimiter');
 
 /**
@@ -57,7 +58,7 @@ router.post('/phone/login', loginLimiter, async (req, res, next) => {
       expiresIn: 7200,
       user: {
         id: 1,
-        phone: phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2'),
+        phone: maskPhone(phone),
         nickname: '飞行旅客',
         idVerified: false,
         memberLevel: 1,

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ResponseHelper = require('../utils/response');
+const config = require('../config');
 const { authenticate } = require('../middleware/auth');
 
 // All order routes require authentication
@@ -38,6 +39,15 @@ router.post('/', async (req, res, next) => {
 
     const orderNo = `FC${flightDate.replace(/-/g, '')}${String(Date.now()).slice(-6)}`;
 
+    // 使用配置中的定价参数
+    const { insuranceFee, serviceFeeRate } = config.order;
+    // TODO: 从数据库查询实际航线价格，这里为示例占位
+    const routeBasePrice = 299.00;
+    const baseTotal = routeBasePrice * passengerCount;
+    const totalInsurance = insuranceFee * passengerCount;
+    const serviceFee = parseFloat((baseTotal * serviceFeeRate).toFixed(2));
+    const totalPrice = parseFloat((baseTotal + totalInsurance + serviceFee).toFixed(2));
+
     return ResponseHelper.success(res, {
       orderId: 1001,
       orderNo,
@@ -45,12 +55,12 @@ router.post('/', async (req, res, next) => {
       statusText: '待确认',
       flightDate,
       priceDetail: {
-        basePrice: 299.00 * passengerCount,
+        basePrice: baseTotal,
         surgeAmount: 0,
-        insuranceFee: 10.00 * passengerCount,
-        serviceFee: (299.00 * passengerCount * 0.05).toFixed(2),
+        insuranceFee: totalInsurance,
+        serviceFee,
         discountAmount: 0,
-        totalPrice: (299.00 * passengerCount * 1.05 + 10.00 * passengerCount).toFixed(2),
+        totalPrice,
       },
     }, '订单创建成功', 201);
   } catch (err) {

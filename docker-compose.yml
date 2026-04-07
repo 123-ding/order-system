@@ -16,7 +16,7 @@ services:
       - DB_PASSWORD=${DB_PASSWORD:-root123456}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-      - JWT_SECRET=${JWT_SECRET:-change-me-in-production}
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET must be set in .env file}
     depends_on:
       mysql:
         condition: service_healthy

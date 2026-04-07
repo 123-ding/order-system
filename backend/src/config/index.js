@@ -22,7 +22,13 @@ module.exports = {
 
   // JWT 配置
   jwt: {
-    secret: process.env.JWT_SECRET || 'default-secret-change-me',
+    secret: (() => {
+      const secret = process.env.JWT_SECRET;
+      if (process.env.NODE_ENV === 'production' && !secret) {
+        throw new Error('JWT_SECRET environment variable is required in production');
+      }
+      return secret || 'dev-only-secret-do-not-use-in-production';
+    })(),
     accessExpiresIn: process.env.JWT_ACCESS_EXPIRES || '2h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES || '30d',
   },
